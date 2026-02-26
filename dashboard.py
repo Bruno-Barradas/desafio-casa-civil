@@ -62,7 +62,8 @@ with st.sidebar:
         ["🏠 Visão Geral",
          "📞 Chamados 01/04/2023",
          "🎉 Chamados em Grandes Eventos",
-         "🏖️ Feriados & Clima RJ 2024"],
+         "🏖️ Feriados & Clima RJ 2024",
+         "💡 Insights Adicionais"],
         label_visibility="collapsed",
     )
 
@@ -669,3 +670,243 @@ elif pagina == "🏖️ Feriados & Clima RJ 2024":
                     f"**{len(nao_aprov)} feriado(s) não aproveitável(is) em jan–ago 2024:** "
                     + " · ".join(nao_aprov["localName"].tolist())
                 )
+
+# ============================================================
+# PÁGINA: INSIGHTS ADICIONAIS
+# ============================================================
+elif pagina == "💡 Insights Adicionais":
+    st.title("💡 Insights Adicionais — O que os dados revelam além do óbvio")
+    st.markdown(
+        "Análises que **ninguém pediu** mas que mostram padrões surpreendentes "
+        "escondidos nos dados da Prefeitura do Rio de Janeiro."
+    )
+    st.markdown("---")
+
+    # ── INSIGHT 1: Réveillon abaixo da média ─────────────────
+    st.markdown("### 🎆 1. Réveillon foi o ÚNICO evento ABAIXO da média geral")
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        df_eventos = pd.DataFrame({
+            "Evento": ["Rock in Rio\n(2ª ed.)", "Rock in Rio\n(1ª ed.)", "Carnaval\n2023", "Réveillon\n2022/23"],
+            "Média Diária": [139.25, 133.67, 63.75, 50.67],
+            "Tipo": ["Acima", "Acima", "Acima", "Abaixo da média"]
+        })
+        fig = px.bar(
+            df_eventos, x="Evento", y="Média Diária",
+            color="Tipo",
+            color_discrete_map={"Acima": "#e63946", "Abaixo da média": "#4361ee"},
+            text="Média Diária",
+        )
+        fig.add_hline(y=52.49, line_dash="dash", line_color="gray",
+                      annotation_text="Média geral: 52,49/dia")
+        fig.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+        fig.update_layout(height=350, showlegend=True)
+        st.plotly_chart(fig, use_container_width=True)
+    with col2:
+        st.info(
+            "**Por quê?**\n\n"
+            "O Réveillon tem festas **dispersas pela cidade inteira** — "
+            "Copacabana, bairros, clubes. Isso dilui as reclamações.\n\n"
+            "Já o Rock in Rio concentra **som alto num único ponto**, "
+            "gerando reclamações focadas e intensas."
+        )
+
+    st.markdown("---")
+
+    # ── INSIGHT 2: Rock in Rio > Carnaval ────────────────────
+    st.markdown("### 🎸 2. Rock in Rio gera MAIS reclamações de barulho que o Carnaval")
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.metric("Rock in Rio", "139 chamados/dia", "+165% vs média")
+        st.metric("Carnaval 2023", "63 chamados/dia", "+21% vs média")
+        st.metric("Diferença", "2,2x mais", "Rock in Rio vence")
+    with col2:
+        st.warning(
+            "**Insight surpreendente:** O senso comum diz que o Carnaval é o evento "
+            "mais barulhento do Rio — mas os **dados provam o contrário**.\n\n"
+            "O Rock in Rio gera **mais do que o dobro** de reclamações por dia "
+            "em comparação com o Carnaval. Isso sugere que eventos com palcos fixos "
+            "e som amplificado são mais impactantes para os moradores do entorno "
+            "do que os blocos de rua dispersos do Carnaval."
+        )
+
+    st.markdown("---")
+
+    # ── INSIGHT 3: Campo Grande lidera ───────────────────────
+    st.markdown("### 🏘️ 3. Campo Grande lidera — mas fica longe da orla e do centro")
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        df_bairros = pd.DataFrame({
+            "Bairro": ["Campo Grande", "Tijuca", "Barra da Tijuca",
+                       "Méier", "Ilha do Governador", "Bangu",
+                       "Santa Cruz", "Realengo", "Jacarepaguá", "Centro"],
+            "Chamados": [125, 100, 62, 58, 45, 43, 41, 38, 35, 32],
+            "Região": ["Zona Oeste", "Zona Norte", "Zona Oeste",
+                       "Zona Norte", "Zona Norte", "Zona Oeste",
+                       "Zona Oeste", "Zona Oeste", "Zona Oeste", "Centro"]
+        })
+        fig = px.bar(
+            df_bairros, x="Chamados", y="Bairro", orientation="h",
+            color="Região",
+            color_discrete_map={
+                "Zona Oeste": "#e63946", "Zona Norte": "#4361ee",
+                "Centro": "#2dc653"
+            },
+            text="Chamados",
+        )
+        fig.update_traces(textposition="outside")
+        fig.update_layout(height=380, yaxis=dict(categoryorder="total ascending"))
+        st.plotly_chart(fig, use_container_width=True)
+    with col2:
+        st.info(
+            "**Campo Grande** é um bairro periférico da Zona Oeste — "
+            "longe da praia, do centro e das áreas turísticas.\n\n"
+            "Sua liderança pode indicar:\n"
+            "- Alta densidade populacional\n"
+            "- Menor fiscalização\n"
+            "- Deficiência de serviços urbanos\n\n"
+            "É um sinal de que a **periferia demanda mais atenção** do poder público."
+        )
+
+    st.markdown("---")
+
+    # ── INSIGHT 4: 12,6% sem bairro ──────────────────────────
+    st.markdown("### 📍 4. 12,6% dos chamados não têm localização — problema de qualidade de dados")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        fig = px.pie(
+            values=[1807, 260],
+            names=["Com bairro (1.807)", "Sem bairro (260)"],
+            color_discrete_sequence=["#4361ee", "#e63946"],
+            hole=0.5,
+        )
+        fig.update_layout(height=250)
+        st.plotly_chart(fig, use_container_width=True)
+    with col2:
+        st.metric("Chamados sem localização", "260", "12,6% do total")
+    with col3:
+        st.error(
+            "Para uma prefeitura que toma **decisões baseadas em dados geográficos**, "
+            "12,6% de registros sem localização é um problema crítico de qualidade."
+        )
+
+    st.markdown("---")
+
+    # ── INSIGHT 5: "Outros" é a maior categoria ──────────────
+    st.markdown("### ❓ 5. 'Outros' é a maior categoria real — 31% dos chamados sem categoria")
+    df_tipos = pd.DataFrame({
+        "Tipo": ["Outros", "Estacionamento irregular", "Perturbação do Sossego",
+                 "Iluminação Pública", "Coleta de Lixo", "Poda de Árvore", "Buraco na Via"],
+        "Total": [653, 373, 310, 245, 198, 156, 132],
+        "Destaque": ["⚠️ Problema", "Normal", "Normal", "Normal", "Normal", "Normal", "Normal"]
+    })
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        fig = px.bar(
+            df_tipos.sort_values("Total"), x="Total", y="Tipo", orientation="h",
+            color="Destaque",
+            color_discrete_map={"⚠️ Problema": "#e63946", "Normal": "#4361ee"},
+            text="Total",
+        )
+        fig.update_traces(textposition="outside")
+        fig.update_layout(height=320, showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+    with col2:
+        st.warning(
+            "**'Outros' lidera com 653 chamados** — mais que qualquer categoria específica.\n\n"
+            "Isso significa que **31% dos chamados** não estão sendo categorizados corretamente, "
+            "o que dificulta a gestão e priorização dos serviços públicos."
+        )
+
+    st.markdown("---")
+
+    # ── INSIGHT 6 + 7: Clima ─────────────────────────────────
+    st.markdown("### 🌡️ 6 & 7. O Rio nunca fica realmente frio — e Fevereiro é mais quente que Janeiro")
+    col1, col2 = st.columns(2)
+    with col1:
+        df_temp = pd.DataFrame({
+            "Mês": ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago"],
+            "Temp": [26.1, 27.1, 26.5, 25.2, 23.8, 21.4, 20.8, 21.9]
+        })
+        fig = px.line(
+            df_temp, x="Mês", y="Temp", markers=True,
+            color_discrete_sequence=["#e63946"],
+            text="Temp",
+        )
+        fig.add_hline(y=20, line_dash="dash", line_color="blue",
+                      annotation_text="Limite 'frio' carioca (20°C)")
+        fig.update_traces(texttemplate="%{text:.1f}°C", textposition="top center")
+        fig.update_layout(height=300, yaxis_range=[18, 29])
+        st.plotly_chart(fig, use_container_width=True)
+    with col2:
+        st.info(
+            "**Julho = 20,8°C** — exatamente no limite do 'frio' para o carioca.\n\n"
+            "Na prática, **o Rio nunca fica frio de verdade** — nem no inverno a temperatura "
+            "cai abaixo do limiar.\n\n"
+            "**Bônus:** Fevereiro (27,1°C) é **mais quente que Janeiro** (26,1°C) — "
+            "contraintuitivo para quem pensa que janeiro é o pico do verão."
+        )
+
+    st.markdown("---")
+
+    # ── INSIGHT 8: Novembro improdutivo ──────────────────────
+    st.markdown("### 📅 8. Novembro é o mês mais 'improdutivo' — 3 feriados quase consecutivos")
+    df_feriados_mes = pd.DataFrame({
+        "Mês": ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+                "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+        "Feriados": [1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 3, 1],
+    })
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        fig = px.bar(
+            df_feriados_mes, x="Mês", y="Feriados",
+            color="Feriados",
+            color_continuous_scale=["#e0e7ff", "#4361ee"],
+            text="Feriados",
+        )
+        fig.update_traces(textposition="outside")
+        fig.update_layout(height=300, showlegend=False, coloraxis_showscale=False)
+        st.plotly_chart(fig, use_container_width=True)
+    with col2:
+        st.warning(
+            "**Novembro tem 3 feriados:**\n\n"
+            "- 02/11 — Finados (Sábado)\n"
+            "- 15/11 — Proclamação da República (Sexta)\n"
+            "- 20/11 — Consciência Negra (Quarta)\n\n"
+            "Dois feriados em dias úteis em menos de uma semana!"
+        )
+
+    st.markdown("---")
+
+    # ── INSIGHT 9 + 10: Úteis e Rock in Rio combinado ────────
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("### 🗓️ 9. 67% dos feriados impactam dias úteis")
+        fig = px.pie(
+            values=[10, 5],
+            names=["Dias úteis (10)", "Fim de semana (5)"],
+            color_discrete_sequence=["#e63946", "#4361ee"],
+            hole=0.4,
+        )
+        fig.update_layout(height=280)
+        st.plotly_chart(fig, use_container_width=True)
+        st.info("2 em cada 3 feriados tiram um dia de trabalho.")
+
+    with col2:
+        st.markdown("### 🎸 10. Rock in Rio 2022 = quase 1.000 reclamações de barulho")
+        st.metric("1ª edição (02–04/set)", "401 chamados", "3 dias")
+        st.metric("2ª edição (08–11/set)", "557 chamados", "4 dias")
+        st.metric("TOTAL combinado", "958 chamados", "em um único evento")
+        st.error(
+            "Quase **1.000 reclamações de barulho** em um único evento "
+            "espalhado por dois fins de semana consecutivos."
+        )
+
+    st.markdown("---")
+    st.success(
+        "💡 **Conclusão geral:** Os dados revelam que a **periferia (Campo Grande/Zona Oeste)** "
+        "é a mais carente de serviços, que o **Rock in Rio supera o Carnaval** em impacto sonoro, "
+        "e que a **qualidade dos dados cadastrais** da Prefeitura precisa de atenção — "
+        "12,6% dos chamados não têm localização e 31% não têm categoria adequada."
+    )
+
